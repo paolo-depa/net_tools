@@ -1,0 +1,34 @@
+vi /usr/lib/systemd/system/io.podman.dhcp.socket
+
+[Unit]
+Description=DHCP Client for CNI
+
+[Socket]
+ListenStream=%t/cni/dhcp.sock
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target
+
+=====================================================
+
+vi /usr/lib/systemd/system/io.podman.dhcp.service
+
+[Unit]
+Description=DHCP Client CNI Service
+Requires=io.podman.dhcp.socket
+After=io.podman.dhcp.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/cni/dhcp daemon
+TimeoutStopSec=30
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+Also=io.podman.dhcp.socket
+====================================================
+
+systemctl --now enable io.podman.dhcp.socket
+
