@@ -1,3 +1,4 @@
+
 vi /usr/lib/systemd/system/io.podman.dhcp.socket
 
 [Unit]
@@ -21,7 +22,7 @@ After=io.podman.dhcp.socket
 
 [Service]
 Type=simple
-ExecStart=/usr/libexec/cni/dhcp daemon
+ExecStart=/usr/lib/cni/dhcp daemon
 TimeoutStopSec=30
 KillMode=process
 
