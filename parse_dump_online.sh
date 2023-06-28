@@ -14,14 +14,14 @@ prev_seq_end="0"
 prev_seq_start="0"
 
 # Check if there is piped input
-if [ -t 0 ]; then
-    echo "No piped input found. Please pipe input to the script."
+if [ $# -ne 1 ] || [ ! -r $1 ]; then
+    echo "Usage: $0 <FILE_TO_PARSE>"
     exit 1
 fi
 
-same_seq_counter=1
+
 line_counter=0
-while IFS= read -r line; do
+while read line; do
     ((line_counter++))
 
     # filtering outgoing packets, associated with a delivered sequence range (trimming the last ',' char from it)
@@ -34,16 +34,19 @@ while IFS= read -r line; do
     seq_end=${seq_start_ending#*:}
 
     if [[ "$seq_start" -gt "$prev_seq_end" ]]; then
-        ((same_seq_counter++))
-        echo "$line_counter: $same_seq_counter |${seq_start}|$prev_seq_end|" 
-        #echo $line >> "$output_file"
-    	# /usr/sbin/ss -netim $ss_filter >> "$output_file"
-    else
-        same_seq_counter=1
+
+        #Jump in the sequence detected: searching for retransmissions of the same seq number through outgoing packets
+        occurrences=$(tail -n +$line_counter "$1" | grep "$prev_seq_end:" | grep -c "Out")
+
+        if [[ $occurrences -gt 0 ]]; then
+            echo "$line_counter: |${seq_start}|$prev_seq_end|$occurrences"
+            #echo $line >> "$output_file"
+            # /usr/sbin/ss -netim $ss_filter >> "$output_file"
+        fi
     fi
 
     prev_seq_start="$seq_start"
     prev_seq_end="$seq_end"
     
-done
+done < "$1"
 

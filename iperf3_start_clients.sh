@@ -42,7 +42,7 @@ for dscp in "${dscp_values[@]}"; do
 
   podman run -d --rm --name iperf_$port \
     --network $macvlan_network $iperf_img \
-    iperf3 -c $server_a_ip -p $port --cport $port -t $timeout --dscp $dscp
+    iperf3 -c $server_a_ip -p $port --cport $port -t $timeout --dscp "$dscp"
   echo "Container iperf_$port is running."
   
   ((port++))
