@@ -9,9 +9,9 @@
 
 ss_filter='dport :5201'
 output_file="/tmp/ss_output.txt"
->$output_file
-prev_seq_ending=""
-prev_seq_starting=""
+true > $output_file
+prev_seq_end="0"
+prev_seq_start="0"
 
 # Check if there is piped input
 if [ -t 0 ]; then
@@ -23,6 +23,7 @@ same_seq_counter=1
 line_counter=0
 while IFS= read -r line; do
     ((line_counter++))
+
     # filtering outgoing packets, associated with a delivered sequence range (trimming the last ',' char from it)
     seq_start_ending=$(awk ' $3 ~ Out && $11 ~ /[0-9]*:[0-9]*,/ { print substr($11, 1, length($11)-1)}' <<< "$line")
     if [[ "z"$seq_start_ending == "z" ]]; then
@@ -32,9 +33,9 @@ while IFS= read -r line; do
     seq_start=${seq_start_ending%:*}
     seq_end=${seq_start_ending#*:}
 
-    #echo $line_counter: "$seq_start_ending"
-    if [[ "$seq_start" -le "$prev_seq_start" ]]; then
-        echo "$line_counter: $((same_seq_counter++)) |${seq_start}|$prev_seq_start|" 
+    if [[ "$seq_start" -gt "$prev_seq_end" ]]; then
+        ((same_seq_counter++))
+        echo "$line_counter: $same_seq_counter |${seq_start}|$prev_seq_end|" 
         #echo $line >> "$output_file"
     	# /usr/sbin/ss -netim $ss_filter >> "$output_file"
     else
