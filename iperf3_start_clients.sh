@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Script: iperf3_client_start.sh
-# Description: Script to start iperf3 client containers with different TOS values
+# Description: Script to start iperf3 client containers running with different TOS values
 #
 # Author: paolodepa
 # Date: 2023-06-27
@@ -10,7 +10,7 @@
 #
 
 iperf_img="docker.io/networkstatic/iperf3"
-tos_values=(0 2 4 8)  # Example TOS values; adjust as needed
+tos_values=(0 2 4)  # Example TOS values; adjust as needed
 server_a_ip="germ176"  # Replace with the hostname or IP address of Server A
 port=5001  # Initial port number
 timeout=10  # Timeout value in seconds (default: 10 seconds)
@@ -48,3 +48,7 @@ for tos in "${tos_values[@]}"; do
   ((port++))
 done
 
+echo "Don't forget to monitor the pods and, on completion, to stop tcpdumps:"
+echo ""
+echo "watch -n 1 'podman ps -all'"
+echo "killall tcpdump"
