@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Script: iperf3_client_start.sh
-# Description: Script to start iperf3 client containers running with different DSCP values
+# Description: Script to start iperf3 client containers running with different TOS values
 #
 # Author: paolodepa
 # Date: 2023-06-27
@@ -10,7 +10,7 @@
 #
 
 iperf_img="docker.io/networkstatic/iperf3"
-dscp_values=(0 2 4)  # Example DSCP values; adjust as needed
+tos_values=(0 8 16)  # Example TOS values; adjust as needed
 server_a_ip="germ176"  # Replace with the hostname or IP address of Server A
 port=5001  # Initial port number
 timeout=600  # Timeout value in seconds (default: 10 seconds)
@@ -32,17 +32,17 @@ podman network inspect $macvlan_network >/dev/null 2>&1 ||
 podman image exists $iperf_img >/dev/null 2>&1 ||
   podman image pull $iperf_img
 
-# Run iperf3 in a separate container for each combination of DSCP and port
-for dscp in "${dscp_values[@]}"; do
+# Run iperf3 in a separate container for each combination of TOS and port
+for tos in "${tos_values[@]}"; do
 
-  echo "======= DSCP: $dscp / PORT: $port ======="
+  echo "======= TOS: $TOS / PORT: $port ======="
 
-  tcpdump -ni any host $server_a_ip and port $port  > /tmp/$port.txt &
-  echo "$port traffic being captured in /tmp/$port.pcap"
+  tcpdump -ni any host $server_a_ip and port $port -v > /tmp/$port.txt &
+  echo "TOS: $tos traffic being captured in /tmp/$port.pcap"
 
-  podman run -d --rm --name iperf_$port \
+  podman run -d --rm --name iperf_$port --cap-add CAP_NET_RAW --cap-add CAP_NET_ADMIN \
     --network $macvlan_network $iperf_img \
-    iperf3 -c $server_a_ip -p $port --cport $port -t $timeout --dscp "$dscp"
+    iperf3 -c $server_a_ip -p $port --cport $port -t $timeout -S "$tos"
   echo "Container iperf_$port is running."
   
   ((port++))
